@@ -29,11 +29,11 @@ namespace HubSpot\Client\Cms\Blogs\Tags\Api;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\RequestOptions;
+use Psr\Http\Client\NetworkExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use HubSpot\Client\Cms\Blogs\Tags\ApiException;
@@ -204,13 +204,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -286,8 +289,9 @@ class BlogTagsApi
                     return [null, $response->getStatusCode(), $response->getHeaders()];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -295,8 +299,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -376,7 +380,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -447,13 +451,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -527,8 +534,9 @@ class BlogTagsApi
                     return [null, $response->getStatusCode(), $response->getHeaders()];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -536,8 +544,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -584,7 +592,7 @@ class BlogTagsApi
         if (isset($batch_input_string)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($batch_input_string));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($batch_input_string), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $batch_input_string;
             }
@@ -605,7 +613,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -676,13 +684,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -756,8 +767,9 @@ class BlogTagsApi
                     return [null, $response->getStatusCode(), $response->getHeaders()];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -765,8 +777,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -813,7 +825,7 @@ class BlogTagsApi
         if (isset($attach_to_lang_primary_request_v_next)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($attach_to_lang_primary_request_v_next));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($attach_to_lang_primary_request_v_next), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $attach_to_lang_primary_request_v_next;
             }
@@ -834,7 +846,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -906,13 +918,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -1041,8 +1056,9 @@ class BlogTagsApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -1050,8 +1066,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -1098,7 +1114,7 @@ class BlogTagsApi
         if (isset($tag)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($tag));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($tag), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $tag;
             }
@@ -1119,7 +1135,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -1191,13 +1207,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -1340,8 +1359,9 @@ class BlogTagsApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -1349,8 +1369,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -1397,7 +1417,7 @@ class BlogTagsApi
         if (isset($batch_input_tag)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($batch_input_tag));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($batch_input_tag), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $batch_input_tag;
             }
@@ -1418,7 +1438,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -1490,13 +1510,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -1625,8 +1648,9 @@ class BlogTagsApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -1634,8 +1658,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -1682,7 +1706,7 @@ class BlogTagsApi
         if (isset($tag_clone_request_v_next)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($tag_clone_request_v_next));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($tag_clone_request_v_next), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $tag_clone_request_v_next;
             }
@@ -1703,7 +1727,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -1774,13 +1798,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -1854,8 +1881,9 @@ class BlogTagsApi
                     return [null, $response->getStatusCode(), $response->getHeaders()];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -1863,8 +1891,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -1911,7 +1939,7 @@ class BlogTagsApi
         if (isset($detach_from_lang_group_request_v_next)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($detach_from_lang_group_request_v_next));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($detach_from_lang_group_request_v_next), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $detach_from_lang_group_request_v_next;
             }
@@ -1932,7 +1960,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -2008,13 +2036,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -2147,8 +2178,9 @@ class BlogTagsApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -2156,8 +2188,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -2248,7 +2280,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -2340,13 +2372,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -2495,8 +2530,9 @@ class BlogTagsApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -2504,8 +2540,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -2679,7 +2715,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -2753,13 +2789,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -2904,8 +2943,9 @@ class BlogTagsApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -2913,8 +2953,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -2972,7 +3012,7 @@ class BlogTagsApi
         if (isset($batch_input_string)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($batch_input_string));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($batch_input_string), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $batch_input_string;
             }
@@ -2993,7 +3033,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -3064,13 +3104,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -3144,8 +3187,9 @@ class BlogTagsApi
                     return [null, $response->getStatusCode(), $response->getHeaders()];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -3153,8 +3197,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -3201,7 +3245,7 @@ class BlogTagsApi
         if (isset($set_new_language_primary_request_v_next)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($set_new_language_primary_request_v_next));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($set_new_language_primary_request_v_next), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $set_new_language_primary_request_v_next;
             }
@@ -3222,7 +3266,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -3298,13 +3342,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -3437,8 +3484,9 @@ class BlogTagsApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -3446,8 +3494,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -3521,7 +3569,7 @@ class BlogTagsApi
         if (isset($tag)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($tag));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($tag), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $tag;
             }
@@ -3542,7 +3590,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -3616,13 +3664,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -3767,8 +3818,9 @@ class BlogTagsApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -3776,8 +3828,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -3835,7 +3887,7 @@ class BlogTagsApi
         if (isset($batch_input_json_node)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($batch_input_json_node));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($batch_input_json_node), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $batch_input_json_node;
             }
@@ -3856,7 +3908,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -3927,13 +3979,16 @@ class BlogTagsApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -4007,8 +4062,9 @@ class BlogTagsApi
                     return [null, $response->getStatusCode(), $response->getHeaders()];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -4016,8 +4072,8 @@ class BlogTagsApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -4064,7 +4120,7 @@ class BlogTagsApi
         if (isset($update_languages_request_v_next)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($update_languages_request_v_next));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($update_languages_request_v_next), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $update_languages_request_v_next;
             }
@@ -4085,7 +4141,7 @@ class BlogTagsApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);

@@ -29,11 +29,11 @@ namespace HubSpot\Client\Cms\SourceCode\Api;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\RequestOptions;
+use Psr\Http\Client\NetworkExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use HubSpot\Client\Cms\SourceCode\ApiException;
@@ -168,13 +168,16 @@ class MetadataApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -307,8 +310,9 @@ class MetadataApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -316,8 +320,8 @@ class MetadataApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -416,7 +420,7 @@ class MetadataApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);

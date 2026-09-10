@@ -29,11 +29,11 @@ namespace HubSpot\Client\Crm\Schemas\Api;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\MultipartStream;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\RequestOptions;
+use Psr\Http\Client\NetworkExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use HubSpot\Client\Crm\Schemas\ApiException;
@@ -179,13 +179,16 @@ class CoreApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -257,8 +260,9 @@ class CoreApi
                     return [null, $response->getStatusCode(), $response->getHeaders()];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -266,8 +270,8 @@ class CoreApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -347,7 +351,7 @@ class CoreApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -416,13 +420,16 @@ class CoreApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -494,8 +501,9 @@ class CoreApi
                     return [null, $response->getStatusCode(), $response->getHeaders()];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -503,8 +511,8 @@ class CoreApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -589,7 +597,7 @@ class CoreApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -657,13 +665,16 @@ class CoreApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -788,8 +799,9 @@ class CoreApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -797,8 +809,8 @@ class CoreApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -845,7 +857,7 @@ class CoreApi
         if (isset($object_schema_egg)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($object_schema_egg));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($object_schema_egg), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $object_schema_egg;
             }
@@ -866,7 +878,7 @@ class CoreApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -936,13 +948,16 @@ class CoreApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -1069,8 +1084,9 @@ class CoreApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -1078,8 +1094,8 @@ class CoreApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -1142,7 +1158,7 @@ class CoreApi
         if (isset($association_definition_egg)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($association_definition_egg));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($association_definition_egg), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $association_definition_egg;
             }
@@ -1163,7 +1179,7 @@ class CoreApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -1231,13 +1247,16 @@ class CoreApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -1362,8 +1381,9 @@ class CoreApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -1371,8 +1391,8 @@ class CoreApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -1436,7 +1456,7 @@ class CoreApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -1504,13 +1524,16 @@ class CoreApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -1635,8 +1658,9 @@ class CoreApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -1644,8 +1668,8 @@ class CoreApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -1714,7 +1738,7 @@ class CoreApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
@@ -1784,13 +1808,16 @@ class CoreApi
             try {
                 $response = $this->client->send($request, $options);
             } catch (RequestException $e) {
+                // Guzzle 8 exposes a response only on ResponseException subclasses.
+                $errorResponse = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
-                    $e->getResponse() ? $e->getResponse()->getHeaders() : null,
-                    $e->getResponse() ? (string) $e->getResponse()->getBody() : null
+                    $errorResponse ? $errorResponse->getHeaders() : null,
+                    $errorResponse ? (string) $errorResponse->getBody() : null
                 );
-            } catch (ConnectException $e) {
+            } catch (NetworkExceptionInterface $e) {
                 throw new ApiException(
                     "[{$e->getCode()}] {$e->getMessage()}",
                     (int) $e->getCode(),
@@ -1917,8 +1944,9 @@ class CoreApi
                     ];
                 },
                 function ($exception) {
-                    $response = $exception->getResponse();
-                    $statusCode = $response->getStatusCode();
+                    // Guzzle 8 exposes a response only on ResponseException subclasses.
+                    $response = method_exists($exception, 'getResponse') ? $exception->getResponse() : null;
+                    $statusCode = $response ? $response->getStatusCode() : 0;
                     throw new ApiException(
                         sprintf(
                             '[%d] Error connecting to the API (%s)',
@@ -1926,8 +1954,8 @@ class CoreApi
                             $exception->getRequest()->getUri()
                         ),
                         $statusCode,
-                        $response->getHeaders(),
-                        (string) $response->getBody()
+                        $response ? $response->getHeaders() : null,
+                        $response ? (string) $response->getBody() : null
                     );
                 }
             );
@@ -1990,7 +2018,7 @@ class CoreApi
         if (isset($object_type_definition_patch)) {
             if (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the body
-                $httpBody = \GuzzleHttp\Utils::jsonEncode(ObjectSerializer::sanitizeForSerialization($object_type_definition_patch));
+                $httpBody = json_encode(ObjectSerializer::sanitizeForSerialization($object_type_definition_patch), JSON_THROW_ON_ERROR);
             } else {
                 $httpBody = $object_type_definition_patch;
             }
@@ -2011,7 +2039,7 @@ class CoreApi
 
             } elseif (stripos($headers['Content-Type'], 'application/json') !== false) {
                 # if Content-Type contains "application/json", json_encode the form parameters
-                $httpBody = \GuzzleHttp\Utils::jsonEncode($formParams);
+                $httpBody = json_encode($formParams, JSON_THROW_ON_ERROR);
             } else {
                 // for HTTP post (form)
                 $httpBody = ObjectSerializer::buildQuery($formParams);
